@@ -58,9 +58,9 @@ def get_connection_from_ollama(note_content, model_name):
         print(f"Exception when calling Ollama API: {e}")
         return f"Failed to generate connection due to error: {str(e)}"
 
-def get_summary_from_ollama(note_content, model_name):
+def get_summary_from_ollama(note_content, model_name, summary_length):
     """Send note content to Ollama and get a summary."""
-    prompt = PROMPT_TEMPLATE.format(note_content=note_content)
+    prompt = f"Please provide a {summary_length} summary of the following note from my Obsidian vault:\n\n{note_content}"
     
     try:
         response = requests.post(
@@ -196,17 +196,37 @@ def main():
     print("\nEnter the folder name to summarize, or '-a' to summarize all folders:")
     selected = input().strip()
 
+    # Allow folder selection to be case-insensitive and handle spaces
+    selected_folder = None
     if selected == "-a":
         search_path = OBSIDIAN_VAULT_PATH
         folder_label = "all"
         print("Summarizing all folders...")
-    elif selected in folders:
-        search_path = os.path.join(OBSIDIAN_VAULT_PATH, selected)
-        folder_label = selected
-        print(f"Summarizing only folder: {selected}")
     else:
-        print("Invalid selection. Exiting.")
-        return
+        # Match ignoring case and leading/trailing spaces
+        for folder in folders:
+            if selected.lower() == folder.lower():
+                selected_folder = folder
+                break
+        if selected_folder:
+            search_path = os.path.join(OBSIDIAN_VAULT_PATH, selected_folder)
+            folder_label = selected_folder
+            print(f"Summarizing only folder: {selected_folder}")
+        else:
+            print("Invalid selection. Exiting.")
+            return
+
+    print("\nSelect summary length: (1) Short  (2) Medium  (3) Long")
+    length_choice = input("Enter 1, 2, or 3: ").strip()
+    if length_choice == "1":
+        summary_length = "short (1-2 sentences)"
+    elif length_choice == "2":
+        summary_length = "medium (1 paragraph)"
+    elif length_choice == "3":
+        summary_length = "long (detailed, multiple paragraphs)"
+    else:
+        print("Invalid selection. Defaulting to medium length.")
+        summary_length = "medium (1 paragraph)"
 
     # Find all markdown files in the selected folder or all folders
     md_files = find_markdown_files(search_path)
@@ -223,7 +243,7 @@ def main():
             print(f"Skipping empty note: {file_path}")
             continue
         print(f"Generating summary via Ollama ({MODEL_NAME})...")
-        summary = get_summary_from_ollama(note_content, MODEL_NAME)
+        summary = get_summary_from_ollama(note_content, MODEL_NAME, summary_length)
         summaries.append((file_path, summary))
         print(f"Summary generated successfully.")
 
