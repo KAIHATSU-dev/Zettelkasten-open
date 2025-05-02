@@ -7,7 +7,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 # Configuration
-OBSIDIAN_VAULT_PATH = r"C:\Softwares\Obsidian and PF vault\VaultSync"  # Update this to your actual Obsidian vault path
+OBSIDIAN_VAULT_PATH = r"C:\Softwares\Obsidian and PF vault"  # Update this to your actual Obsidian vault path
 OLLAMA_API_URL = "http://localhost:11434/api/generate"  # Default Ollama API URL
 MODEL_NAME = "llama3.2"  # Change to the model you're using with Ollama
 SUMMARIES_FOLDER = "summaries"  # Folder to store individual summaries
@@ -185,31 +185,104 @@ def list_folders_in_vault(vault_path):
             folders.append(entry.name)
     return folders
 
-def main():
-    print(f"Starting to process Obsidian notes from: {OBSIDIAN_VAULT_PATH}")
+def batch(iterable, n=1):
+    """Yield successive n-sized batches from iterable."""
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
 
-    # List all folders in the vault
-    folders = list_folders_in_vault(OBSIDIAN_VAULT_PATH)
-    print("\nFolders found in the vault:")
+def get_summaries_from_ollama_batch(note_contents, model_name, summary_length):
+    """Send a batch of note contents to Ollama and get summaries."""
+    prompt = """Please provide {summary_length} summaries for the following notes from my Obsidian vault. For each note, return a summary in the same order, separated by \n---\n.\n\n""".format(summary_length=summary_length)
+    for idx, content in enumerate(note_contents):
+        prompt += f"Note {idx+1}:\n{content}\n\n"
+    try:
+        response = requests.post(
+            OLLAMA_API_URL,
+            json={
+                "model": model_name,
+                "prompt": prompt,
+                "stream": False
+            }
+        )
+        if response.status_code == 200:
+            result = response.json()
+            # Split summaries by ---
+            summaries = result.get("response", "").split("\n---\n")
+            return [s.strip() for s in summaries if s.strip()]
+        else:
+            print(f"Error from Ollama API: {response.status_code}, {response.text}")
+            return [f"Failed to generate summary (Error: {response.status_code})"] * len(note_contents)
+    except Exception as e:
+        print(f"Exception when calling Ollama API: {e}")
+        return [f"Failed to generate summary due to error: {str(e)}"] * len(note_contents)
+
+def list_vaults(parent_path):
+    """List all vaults (folders) in the parent OBSIDIAN_VAULT_PATH."""
+    vaults = []
+    for entry in os.scandir(parent_path):
+        if entry.is_dir() and not entry.name.startswith('.'):
+            vaults.append(entry.name)
+    return vaults
+
+def main():
+    print(f"Parent Obsidian vault path: {OBSIDIAN_VAULT_PATH}")
+    # Step 1: List all vaults in the parent path
+    vaults = list_vaults(OBSIDIAN_VAULT_PATH)
+    if not vaults:
+        print("No vaults found in the specified parent path.")
+        return
+    print("\nVaults found:")
+    for idx, vault in enumerate(vaults, 1):
+        print(f"  {idx}. {vault}")
+    print("\nEnter the vault name or index to use:")
+    selected_vault = input().strip()
+    chosen_vault = None
+    # Check if input is an index
+    if selected_vault.isdigit():
+        idx = int(selected_vault)
+        if 1 <= idx <= len(vaults):
+            chosen_vault = vaults[idx - 1]
+    else:
+        for vault in vaults:
+            if selected_vault.lower() == vault.lower():
+                chosen_vault = vault
+                break
+    if not chosen_vault:
+        print("Invalid vault selection. Exiting.")
+        return
+    vault_path = os.path.join(OBSIDIAN_VAULT_PATH, chosen_vault)
+    print(f"Using vault: {chosen_vault}\n")
+
+    # Step 2: List folders in the selected vault
+    folders = list_folders_in_vault(vault_path)
+    print("Folders found in the vault:")
     for idx, folder in enumerate(folders, 1):
         print(f"  {idx}. {folder}")
-    print("\nEnter the folder name to summarize, or '-a' to summarize all folders:")
+    print("\nEnter the folder name or index to summarize, or '-a' to summarize all folders:")
     selected = input().strip()
-
-    # Allow folder selection to be case-insensitive and handle spaces
     selected_folder = None
     if selected == "-a":
-        search_path = OBSIDIAN_VAULT_PATH
+        search_path = vault_path
         folder_label = "all"
         print("Summarizing all folders...")
+    elif selected.isdigit():
+        idx = int(selected)
+        if 1 <= idx <= len(folders):
+            selected_folder = folders[idx - 1]
+            search_path = os.path.join(vault_path, selected_folder)
+            folder_label = selected_folder
+            print(f"Summarizing only folder: {selected_folder}")
+        else:
+            print("Invalid selection. Exiting.")
+            return
     else:
-        # Match ignoring case and leading/trailing spaces
         for folder in folders:
             if selected.lower() == folder.lower():
                 selected_folder = folder
                 break
         if selected_folder:
-            search_path = os.path.join(OBSIDIAN_VAULT_PATH, selected_folder)
+            search_path = os.path.join(vault_path, selected_folder)
             folder_label = selected_folder
             print(f"Summarizing only folder: {selected_folder}")
         else:
@@ -228,24 +301,23 @@ def main():
         print("Invalid selection. Defaulting to medium length.")
         summary_length = "medium (1 paragraph)"
 
-    # Find all markdown files in the selected folder or all folders
     md_files = find_markdown_files(search_path)
     print(f"Found {len(md_files)} markdown files")
 
-    summaries_folder = os.path.join(OBSIDIAN_VAULT_PATH, SUMMARIES_FOLDER, folder_label)
+    summaries_folder = os.path.join(vault_path, SUMMARIES_FOLDER, folder_label)
     os.makedirs(summaries_folder, exist_ok=True)
 
+    BATCH_SIZE = 5
     summaries = []
-    for i, file_path in enumerate(tqdm(md_files, desc="Generating summaries")):
-        print(f"Processing {i+1}/{len(md_files)}: {file_path}")
-        note_content = read_note_content(file_path)
-        if not note_content:
-            print(f"Skipping empty note: {file_path}")
+    for file_batch in tqdm(list(batch(md_files, BATCH_SIZE)), desc="Generating summaries (batch)"):
+        note_contents = [read_note_content(fp) for fp in file_batch]
+        valid_pairs = [(fp, nc) for fp, nc in zip(file_batch, note_contents) if nc]
+        if not valid_pairs:
             continue
-        print(f"Generating summary via Ollama ({MODEL_NAME})...")
-        summary = get_summary_from_ollama(note_content, MODEL_NAME, summary_length)
-        summaries.append((file_path, summary))
-        print(f"Summary generated successfully.")
+        valid_file_paths, valid_note_contents = zip(*valid_pairs)
+        batch_summaries = get_summaries_from_ollama_batch(valid_note_contents, MODEL_NAME, summary_length)
+        for fp, summary in zip(valid_file_paths, batch_summaries):
+            summaries.append((fp, summary))
 
     saved_count = save_summary_to_individual_files(summaries_folder, summaries)
     print(f"All done! Saved {saved_count} summaries to folder: {summaries_folder}")
@@ -285,7 +357,7 @@ def main():
         print(f"Exception when calling Ollama API: {e}")
         connections = f"Failed to generate connections due to error: {str(e)}"
 
-    connections_folder = os.path.join(OBSIDIAN_VAULT_PATH, "connections")
+    connections_folder = os.path.join(vault_path, "connections")
     os.makedirs(connections_folder, exist_ok=True)
     connections_file_path = os.path.join(connections_folder, f"connections-{folder_label}.md")
     if connections:
