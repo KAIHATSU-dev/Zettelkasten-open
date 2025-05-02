@@ -14,9 +14,9 @@ Ollama is required to run the local LLM models that power the summarization and 
 
 1. Visit [ollama.ai](https://ollama.ai/) to download and install Ollama for your operating system.
 2. After installation, start Ollama.
-3. Pull a language model (recommended: llama3):
+3. Pull a language model (recommended: llama3.2):
    ```bash
-   ollama pull llama3
+   ollama pull llama3.2
    ```
 
 ## Installing Zettelkasten-Open
@@ -28,8 +28,8 @@ Ollama is required to run the local LLM models that power the summarization and 
 git clone https://github.com/yourusername/zettelkasten-open.git
 cd zettelkasten-open
 
-# Install the package in development mode
-pip install -e .
+# Install the requirements
+pip install  -r Understand-Yourself\main\requirements.txt
 ```
 
 ### Method 2: From PyPI (Once Published)

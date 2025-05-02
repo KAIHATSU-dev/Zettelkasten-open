@@ -18,47 +18,27 @@ A tool to analyze your Obsidian vault notes, create summaries, and discover mean
 git clone https://github.com/yourusername/zettelkasten-open.git
 cd zettelkasten-open
 
+# A virtual envionrment is highly recommended
+python -m venv 'name of virtual enviornment'
+
+example:
+python -m venv venv
+.\venv\Scripts\activate
+
+# activate the virtual enviornment
+
+
 # Install the package
-pip install -e .
-```
-
-Or install directly from PyPI (once published):
-
-```bash
-pip install zettelkasten-open
-```
-
-### Setup
-
-Run the setup wizard to configure your vault path and model:
-
-```bash
-zettelkasten-open --setup
+pip install -r requirements.txt
 ```
 
 ### Usage
 
 Run the analyzer:
 
-```bash
-zettelkasten-open
-```
-
-Additional options:
-
-```bash
-# Show current configuration
-zettelkasten-open --config
-
-# Set Obsidian vault path
-zettelkasten-open --vault "path/to/your/vault"
-
-# Set Ollama model name
-zettelkasten-open --model "llama3"
-```
-
 ## Requirements
 
+- Obsidian
 - Python 3.6+
 - Ollama installed and running locally
 
