@@ -1,13 +1,13 @@
-# Usage Guide
+# Usage Guide for Zettelkasten-Open
 
-This guide explains how to use Understand Yourself to analyze your Obsidian notes.
+This guide explains how to use Zettelkasten-Open to analyze your Obsidian notes.
 
 ## Basic Usage
 
 After installing and setting up the tool, you can simply run:
 
 ```bash
-understand-yourself
+zettelkasten-open
 ```
 
 This will:
@@ -24,16 +24,16 @@ The tool provides several command-line options for customization:
 
 ```bash
 # Run the setup wizard
-understand-yourself --setup
+zettelkasten-open --setup
 
 # Show current configuration
-understand-yourself --config
+zettelkasten-open --config
 
 # Set Obsidian vault path
-understand-yourself --vault "path/to/your/vault"
+zettelkasten-open --vault "path/to/your/vault"
 
 # Set Ollama model name
-understand-yourself --model "llama3"
+zettelkasten-open --model "llama3"
 ```
 
 ## Output Files
@@ -73,6 +73,6 @@ The tool stores your configuration in a JSON file at `~/.understand_yourself/con
 ## Example Workflow
 
 1. Write notes in Obsidian as usual
-2. Periodically run `understand-yourself` to analyze your notes
+2. Periodically run `zettelkasten-open` to analyze your notes
 3. Review the "connections.md" file to gain insights into your thinking
 4. Use these insights to guide further note-taking and ideation

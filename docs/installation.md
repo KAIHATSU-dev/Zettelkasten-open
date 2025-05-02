@@ -1,6 +1,6 @@
-# Installation Guide
+# Installation Guide for Zettelkasten-Open
 
-This guide will help you set up Understand Yourself, a tool for analyzing and finding connections in your Obsidian notes.
+This guide will help you set up Zettelkasten-Open, a tool for analyzing and finding connections in your Obsidian notes.
 
 ## Prerequisites
 
@@ -19,14 +19,14 @@ Ollama is required to run the local LLM models that power the summarization and 
    ollama pull llama3
    ```
 
-## Installing Understand Yourself
+## Installing Zettelkasten-Open
 
 ### Method 1: From GitHub (Development)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/understand-yourself.git
-cd understand-yourself
+git clone https://github.com/yourusername/zettelkasten-open.git
+cd zettelkasten-open
 
 # Install the package in development mode
 pip install -e .
@@ -35,7 +35,7 @@ pip install -e .
 ### Method 2: From PyPI (Once Published)
 
 ```bash
-pip install understand-yourself
+pip install zettelkasten-open
 ```
 
 ## First-time Setup
@@ -43,7 +43,7 @@ pip install understand-yourself
 After installation, run the setup wizard to configure your settings:
 
 ```bash
-understand-yourself --setup
+zettelkasten-open --setup
 ```
 
 You'll need to provide:
@@ -64,4 +64,4 @@ You'll need to provide:
 
 ### Getting Help
 
-If you encounter issues not covered here, please [open an issue](https://github.com/yourusername/understand-yourself/issues) on GitHub.
+If you encounter issues not covered here, please [open an issue](https://github.com/yourusername/zettelkasten-open/issues) on GitHub.

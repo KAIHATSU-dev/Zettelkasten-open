@@ -1,4 +1,4 @@
-# Understand Yourself - Obsidian Notes Analyzer
+# Zettelkasten-Open - Obsidian Notes Analyzer
 
 A tool to analyze your Obsidian vault notes, create summaries, and discover meaningful connections between your ideas.
 
@@ -15,8 +15,8 @@ A tool to analyze your Obsidian vault notes, create summaries, and discover mean
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/understand-yourself.git
-cd understand-yourself
+git clone https://github.com/yourusername/zettelkasten-open.git
+cd zettelkasten-open
 
 # Install the package
 pip install -e .
@@ -25,7 +25,7 @@ pip install -e .
 Or install directly from PyPI (once published):
 
 ```bash
-pip install understand-yourself
+pip install zettelkasten-open
 ```
 
 ### Setup
@@ -33,7 +33,7 @@ pip install understand-yourself
 Run the setup wizard to configure your vault path and model:
 
 ```bash
-understand-yourself --setup
+zettelkasten-open --setup
 ```
 
 ### Usage
@@ -41,20 +41,20 @@ understand-yourself --setup
 Run the analyzer:
 
 ```bash
-understand-yourself
+zettelkasten-open
 ```
 
 Additional options:
 
 ```bash
 # Show current configuration
-understand-yourself --config
+zettelkasten-open --config
 
 # Set Obsidian vault path
-understand-yourself --vault "path/to/your/vault"
+zettelkasten-open --vault "path/to/your/vault"
 
 # Set Ollama model name
-understand-yourself --model "llama3"
+zettelkasten-open --model "llama3"
 ```
 
 ## Requirements
